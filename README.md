@@ -8,7 +8,7 @@
 
 | 文件 | 适用环境 |
 | --- | --- |
-| `pi-1.5.0-windows-x64-lite.zip` | 已安装 Node.js >=22.19.0、Git for Windows、rg、fd；使用系统工具 |
+| `pi-1.5.0-windows-x64-lite.zip` | 已安装 Node.js >=22.19.0、Git for Windows；包内自带 rg 和 fd |
 | `pi-1.5.0-windows-x64.zip` | 包含 Node.js 22.23.4、Portable Git 2.56.0.4、ripgrep 15.2.0、fd 10.5.2；无需预装工具 |
 
 完整包各工具保留原发行包的许可证，工具下载验证固定 SHA-256。
@@ -16,7 +16,7 @@
 ### 精简包
 
 1. 完整解压，例如得到 `C:\Tools\pi-offline-lite`。无需运行 npm install。
-2. 在 PowerShell 确认 `node --version`（至少 22.19.0）、`git --version`、`rg --version`、`fd --version` 都可运行。默认 Bash 工具还需要 Git for Windows 的 Bash；标准安装路径由 Pi 自动发现，非标准路径可在 settings.json 中设置 shellPath。
+2. 在 PowerShell 确认 `node --version`（至少 22.19.0）、`git --version` 都可运行。rg 和 fd 已包含，启动器自动设置其路径，无需另装。默认 Bash 工具还需要 Git for Windows 的 Bash；标准安装路径由 Pi 自动发现，非标准路径可在 settings.json 中设置 shellPath。
 3. 在你的项目目录执行 `C:\Tools\pi-offline-lite\pi.cmd --version`，再执行 `C:\Tools\pi-offline-lite\pi.cmd`。
 4. 可把 `C:\Tools\pi-offline-lite` 加入用户 Path，重开终端后直接运行 `pi`。这是全局可用命令，不是由 npm 管理的全局安装。
 
@@ -47,6 +47,6 @@ C:\Tools\pi-offline\pi.cmd --provider internal-deepseek --model '你的模型ID'
 
 GitHub Actions 页面手动运行 Build Windows offline package。成功后会上传 Actions 产物，并创建带 ZIP 和 SHA256SUMS.txt 的 GitHub Release。
 
-构建使用 Windows Server 2022 x64。完整包自动验证移动到含空格路径后，移除 runner 的额外 PATH，仍能运行 Pi --version/--help、Node、Git Bash、rg 和 fd。精简包在含空格路径下使用 runner 系统 Node 验证 Pi --version/--help。未验证真实 Windows 10 交互终端或实际模型 API。建议在目标 Windows 10 上使用 Windows Terminal。x64 包不适用于 32 位 Windows。
+构建使用 Windows Server 2022 x64。完整包自动验证移动到含空格路径后，移除 runner 的额外 PATH，仍能运行 Pi --version/--help、Node、Git Bash、rg 和 fd。精简包在含空格路径下使用 runner 系统 Node 验证 Pi --version/--help，并验证随包 rg 和 fd。未验证真实 Windows 10 交互终端或实际模型 API。建议在目标 Windows 10 上使用 Windows Terminal。x64 包不适用于 32 位 Windows。
 
 联网安装阶段解析的间接依赖由包内 lockfile 记录，不承诺不同日期重新构建得到逐字节一致的结果。

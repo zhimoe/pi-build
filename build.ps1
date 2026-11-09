@@ -76,18 +76,20 @@ try {
 } finally { $env:PATH = $savedPath }
 Move-Item $relocated $bundle
 
-# The lite package shares the installed dependencies but uses the target's tools.
+# The lite package keeps search tools and uses the target's Node and Git.
 $lite = Join-Path $out 'pi-offline-lite'
 New-Item -ItemType Directory $lite | Out-Null
 Copy-Item "$bundle/app" "$lite/app" -Recurse
+Copy-Item "$bundle/tools" "$lite/tools" -Recurse
 Copy-Item "$root/README.md", "$root/models.example.json" $lite
-@'
+@"
 @echo off
 setlocal
+set "PATH=%~dp0$rgRelative;%~dp0$fdRelative;%PATH%"
 set "PI_OFFLINE=1"
 node.exe "%~dp0app\node_modules\@earendil-works\pi-coding-agent\dist\bundle\cli.js" %*
 exit /b %errorlevel%
-'@ | Set-Content "$lite/pi.cmd" -Encoding ascii
+"@ | Set-Content "$lite/pi.cmd" -Encoding ascii
 $liteRelocated = Join-Path $out 'pi lite relocated'
 Move-Item $lite $liteRelocated
 try {
@@ -96,6 +98,10 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Relocated lite Pi failed with system Node' }
     & "$liteRelocated/pi.cmd" --help
     if ($LASTEXITCODE -ne 0) { throw 'Lite Pi help failed with system Node' }
+    & "$liteRelocated/$rgRelative/rg.exe" --version
+    if ($LASTEXITCODE -ne 0) { throw 'Lite bundled rg failed' }
+    & "$liteRelocated/$fdRelative/fd.exe" --version
+    if ($LASTEXITCODE -ne 0) { throw 'Lite bundled fd failed' }
 } finally { $env:PATH = $savedPath }
 Move-Item $liteRelocated $lite
 Push-Location $out
