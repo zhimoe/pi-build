@@ -1,0 +1,10 @@
+{
+  "providers": {
+    "internal-deepseek": {
+      "baseUrl": "http://REPLACE-WITH-YOUR-SERVER/v1",
+      "api": "openai-completions",
+      "apiKey": "$DEEPSEEK_API_KEY",
+      "models": [{ "id": "REPLACE-WITH-YOUR-MODEL-ID", "name": "Internal DeepSeek" }]
+    }
+  }
+}
