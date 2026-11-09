@@ -1,6 +1,7 @@
 # Assemble a Windows x64 runtime from pinned published packages and verify relocation.
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+$systemPath = $env:PATH
 $root = $PSScriptRoot
 $out = Join-Path $root 'out'
 $downloads = Join-Path $root 'downloads'
@@ -74,10 +75,39 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'fd failed' }
 } finally { $env:PATH = $savedPath }
 Move-Item $relocated $bundle
+
+# The lite package shares the installed dependencies but uses the target's tools.
+$lite = Join-Path $out 'pi-offline-lite'
+New-Item -ItemType Directory $lite | Out-Null
+Copy-Item "$bundle/app" "$lite/app" -Recurse
+Copy-Item "$root/README.md", "$root/models.example.json" $lite
+@'
+@echo off
+setlocal
+set "PI_OFFLINE=1"
+node.exe "%~dp0app\node_modules\@earendil-works\pi-coding-agent\dist\bundle\cli.js" %*
+exit /b %errorlevel%
+'@ | Set-Content "$lite/pi.cmd" -Encoding ascii
+$liteRelocated = Join-Path $out 'pi lite relocated'
+Move-Item $lite $liteRelocated
+try {
+    $env:PATH = $systemPath
+    & "$liteRelocated/pi.cmd" --version
+    if ($LASTEXITCODE -ne 0) { throw 'Relocated lite Pi failed with system Node' }
+    & "$liteRelocated/pi.cmd" --help
+    if ($LASTEXITCODE -ne 0) { throw 'Lite Pi help failed with system Node' }
+} finally { $env:PATH = $savedPath }
+Move-Item $liteRelocated $lite
 Push-Location $out
 try {
-    & 7z a -tzip -mx=5 'pi-1.5.0-windows-x64.zip' 'pi-offline' | Out-Null
-    if ($LASTEXITCODE -ne 0) { throw 'Archive creation failed' }
-    $hash = (Get-FileHash 'pi-1.5.0-windows-x64.zip' -Algorithm SHA256).Hash.ToLowerInvariant()
-    "$hash  pi-1.5.0-windows-x64.zip" | Set-Content 'SHA256SUMS.txt' -Encoding ascii
+    $checksums = foreach ($variant in @(
+        @{ Archive = 'pi-1.5.0-windows-x64.zip'; Directory = 'pi-offline' },
+        @{ Archive = 'pi-1.5.0-windows-x64-lite.zip'; Directory = 'pi-offline-lite' }
+    )) {
+        & 7z a -tzip -mx=5 $variant.Archive $variant.Directory | Out-Null
+        if ($LASTEXITCODE -ne 0) { throw "Archive creation failed: $($variant.Archive)" }
+        $hash = (Get-FileHash $variant.Archive -Algorithm SHA256).Hash.ToLowerInvariant()
+        "$hash  $($variant.Archive)"
+    }
+    $checksums | Set-Content 'SHA256SUMS.txt' -Encoding ascii
 } finally { Pop-Location }
