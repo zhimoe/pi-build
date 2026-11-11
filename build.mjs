@@ -199,7 +199,7 @@ async function main() {
         await installTools(join(staging, "tools"));
         installExtensions(join(staging, "extensions"));
         writeLauncher(staging);
-        copyFileSync(join(root, "lite", "README.md"), join(staging, "README.md"));
+        copyFileSync(join(root, "docs", "README.md"), join(staging, "README.md"));
         copyFileSync(join(root, "models.example.json"), join(staging, "models.example.json"));
 
         const bundleDir = join(distDir, bundleName);
